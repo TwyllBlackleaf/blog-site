@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { User } = require("../../models");
+const { User, Post, Comment } = require("../../models");
 
 // GET /api/users
 router.get("/", (req, res) => {
@@ -16,9 +16,24 @@ router.get("/", (req, res) => {
 // GET /api/users/:id
 router.get("/:id", (req, res) => {
     User.findOne({
+        attributes: { exclude: ["password"] },
         where: {
             id: req.params.id
-        }
+        },
+        include: [
+            {
+                model: Post,
+                attributes: ['id', 'title', 'post_text', 'created_at']
+            },
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'created_at'],
+                include: {
+                    model: Post,
+                    attributes: ['title']
+                }
+            }
+        ]
     })
         .then(userData => {
             if (!userData) {
@@ -65,13 +80,13 @@ router.post("/login", (req, res) => {
             res.status(400).json({ message: 'Incorrect password!' });
             return;
         }
-        
+
         res.json({ user: dbUserData, message: 'You are now logged in!' });
     })
 })
 
 // POST /api/users/:id
-router.post("/:id", (req, res) => {});
+router.post("/:id", (req, res) => { });
 
 // PUT /api/users/:id
 router.put("/:id", (req, res) => {
